@@ -43,10 +43,14 @@ if "utilisateur" in st.session_state:
         # Normalisation
         rename_map = {
             "login": "login",
+            "Login": "login",
             "date": "date",
+            "Date": "date",
             "nbquestions": "nb_questions",
+            "NbQuestions": "nb_questions",
             "nb_questions": "nb_questions",
             "detailsquestions": "details_questions",
+            "DetailsQuestions": "details_questions",
             "details_questions": "details_questions"
         }
         histo = histo.rename(columns=lambda x: rename_map.get(x, x))

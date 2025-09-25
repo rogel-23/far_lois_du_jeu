@@ -105,7 +105,6 @@ if "utilisateur" in st.session_state:
 
     # === TABLEAU DE BORD UTILISATEUR ===
     if st.session_state["utilisateur"]["Login"] != "admin":
-        st.subheader("📊 Mon tableau de bord")
 
         response = supabase.table("historique_sessions").select("*").execute()
         histo = pd.DataFrame(response.data)
@@ -181,10 +180,6 @@ if "utilisateur" in st.session_state:
     questions_df["Format"] = questions_df["Format"].astype(str)
     questions_df["Type"] = questions_df["Type"].astype(str)
     questions_df["Niveau"] = questions_df["Niveau"].astype(str)
-
-
-    # === FILTRES EN MODE TUILES ===
-    st.header("🎛️ Paramètres d'entraînement")
 
     # === LOIS DU JEU ===
     st.subheader("📚 Lois à travailler")

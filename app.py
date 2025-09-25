@@ -87,7 +87,12 @@ if "utilisateur" in st.session_state:
 
         # Détails graphiques
         if "details_questions" in histo_user.columns and not histo_user["details_questions"].dropna().empty:
-            details_exploded = histo_user["details_questions"].dropna().apply(ast.literal_eval).explode()
+            details_exploded = (
+                histo_user["details_questions"]
+                .dropna()
+                .apply(lambda x: json.loads(x) if isinstance(x, str) else x)
+                .explode()
+            )
             questions_details_df = pd.DataFrame(details_exploded.tolist())
 
             if not questions_details_df.empty:
@@ -95,6 +100,12 @@ if "utilisateur" in st.session_state:
                 st.bar_chart(questions_details_df["Loi"].value_counts())
 
                 colf1, colf2 = st.columns(2)
+                colf1.markdown("#### 📝 Formats les plus fréquents")
+                colf1.bar_chart(questions_details_df["Format"].value_counts())
+
+                colf2.markdown("#### 🎯 Niveaux travaillés")
+                colf2.bar_chart(questions_details_df["Niveau"].value_counts())
+
 
 
 
@@ -155,8 +166,6 @@ if "utilisateur" in st.session_state:
                                 niveaux_counts = questions_details_df["Niveau"].value_counts()
                                 col4.markdown("### 🎯 Niveaux")
                                 col4.bar_chart(niveaux_counts)
-
-
         else:
             st.info("Aucune donnée d’historique trouvée.")
 

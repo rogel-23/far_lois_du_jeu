@@ -40,14 +40,7 @@ if "utilisateur" in st.session_state:
 
         response = supabase.table("historique_sessions").select("*").execute()
         histo = pd.DataFrame(response.data)
-        # Normalisation
-        rename_map = {
-            "login": "login",
-            "date": "date",
-            "nbquestions": "nb_questions",
-            "detailsquestions": "details_questions"
-        }
-        histo = histo.rename(columns=lambda x: rename_map.get(x, x))
+
 
         if histo.empty:
             st.warning("⚠️ Aucune donnée trouvée dans Supabase.")
@@ -123,15 +116,6 @@ if "utilisateur" in st.session_state:
         if histo.empty:
             st.warning("⚠️ Aucune donnée trouvée dans la table Supabase `historique_sessions`.")
         else:
-            # Harmonisation des noms de colonnes
-            rename_map = {
-                "login": "login",
-                "date": "date",
-                "nbquestions": "nb_questions",
-                "detailsquestions": "details_questions"
-            }
-            histo = histo.rename(columns=lambda x: rename_map.get(x, x))
-
             st.write("Colonnes disponibles après normalisation :", histo.columns.tolist())
 
             user_login = st.session_state["utilisateur"]["Login"]

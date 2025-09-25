@@ -117,6 +117,7 @@ if "utilisateur" in st.session_state:
         historique_path = "historique_sessions.csv"
         if os.path.exists(historique_path):
             response = supabase.table("historique_sessions").select("*").execute()
+            st.write("🔍 Réponse Supabase :", response)
             histo = pd.DataFrame(response.data)
 
             if histo.empty:

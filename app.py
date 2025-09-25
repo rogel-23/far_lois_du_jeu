@@ -77,7 +77,7 @@ if "utilisateur" in st.session_state:
         comptes_df = pd.read_csv("comptes_arbitres.csv", dtype=str)
         logins = comptes_df[comptes_df["Login"] != "admin"]["Login"].tolist()
         login_selectionne = st.selectbox("Sélectionnez un arbitre :", logins)
-
+        st.write("Colonnes disponibles :", histo.columns.tolist())      
         histo_user = histo[histo["login"] == login_selectionne]
         compte_user = comptes_df[comptes_df["Login"] == login_selectionne].iloc[0]
 
@@ -117,6 +117,7 @@ if "utilisateur" in st.session_state:
             histo = histo.rename(columns=lambda x: rename_map.get(x, x))
 
             user_login = st.session_state["utilisateur"]["Login"]
+            st.write("Colonnes disponibles :", histo.columns.tolist())
             histo_user = histo[histo["login"] == user_login]
             st.write("Colonnes dans le DataFrame histo :", histo.columns.tolist())
 

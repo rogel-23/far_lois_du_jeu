@@ -276,14 +276,13 @@ if "utilisateur" in st.session_state:
 
         try:
             res = supabase.table("historique_sessions").insert([data]).execute()
+            st.write("✅ Résultat brut Supabase :", res)
+            st.write("📦 Données insérées :", res.data)
+            st.write("🔑 Status :", getattr(res, "status_code", "inconnu"))
             st.success("✅ Session enregistrée dans Supabase")
             st.write(res)
         except Exception as e:
             st.error(f"❌ Erreur lors de l'insertion Supabase : {e}")
-
-
-
-
 
 
     # === TIRAGE ALÉATOIRE ===

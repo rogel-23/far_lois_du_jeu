@@ -434,33 +434,46 @@ if "utilisateur" in st.session_state:
                         st.warning("✍️ Merci d’écrire une réponse avant de consulter la correction.")
 
 
-        # === STYLE BOUTON SAUVEGARDE ===
+        # === STYLE SPÉCIFIQUE POUR LE BOUTON SAUVEGARDE ===
         st.markdown("""
             <style>
-            div.stButton > button:first-child {
-                background-color: #4CAF50;
-                color:white;
-                font-size:20px;
-                font-weight:bold;
-                padding:15px 30px;
-                border-radius:10px;
+            .save-session button {
+                background-color: #4CAF50 !important;
+                color:white !important;
+                font-size:20px !important;
+                font-weight:bold !important;
+                padding:15px 30px !important;
+                border-radius:10px !important;
             }
-            div.stButton > button:first-child:hover {
-                background-color: #45a049;
-                color:white;
+            .save-session button:hover {
+                background-color: #45a049 !important;
+                color:white !important;
             }
             .button-right {
                 display: flex;
                 justify-content: flex-end;
+            }
+            .confirmation {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background-color: #4CAF50;
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                font-weight: bold;
+                box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
+                z-index: 9999;
             }
             </style>
         """, unsafe_allow_html=True)
 
         # === ENREGISTREMENT DE LA SESSION ===
         with st.container():
-            st.markdown('<div class="button-right">', unsafe_allow_html=True)
-            if st.button("📥 Sauvegarder la session"):
+            st.markdown('<div class="button-right save-session">', unsafe_allow_html=True)
+            if st.button("📥 Sauvegarder la session", key="save_button"):
                 user_login = st.session_state["utilisateur"]["Login"]
                 enregistrer_session(user_login, st.session_state["questions_tirees"])
+                st.markdown('<div class="confirmation">✅ Session enregistrée avec succès</div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
 

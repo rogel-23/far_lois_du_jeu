@@ -40,13 +40,24 @@ if "utilisateur" in st.session_state:
         histo = pd.read_csv("historique_sessions.csv")
         histo.columns = [col.strip().lower() for col in histo.columns]
 
+        # Normalisation
+        rename_map = {
+            "login": "login",
+            "date": "date",
+            "nbquestions": "nb_questions",
+            "nb_questions": "nb_questions",
+            "detailsquestions": "details_questions",
+            "details_questions": "details_questions"
+        }
+        histo = histo.rename(columns=lambda x: rename_map.get(x, x))
+
         # Ajout des colonnes utiles
         stats = histo.groupby("login").agg({
             "date": "count",
-            "nbquestions": "sum",
+            "nb_questions": "sum",
         }).rename(columns={
             "date": "Sessions",
-            "nbquestions": "Questions générées"
+            "nb_questions": "Questions générées"
         })
         stats["Moyenne Q/session"] = (stats["Questions générées"] / stats["Sessions"]).round(2)
 
@@ -69,7 +80,7 @@ if "utilisateur" in st.session_state:
         st.markdown(f"### 👤 {compte_user['Prénom']} {compte_user['Nom']}")
         col1, col2, col3 = st.columns(3)
         col1.metric("Sessions", len(histo_user))
-        col2.metric("Questions générées", histo_user["nbquestions"].sum())
+        col2.metric("Questions générées", histo_user["nb_questions"].sum())
         col3.metric("Dernière session", histo_user["date"].max())
 
         st.markdown("#### 📄 Sessions récentes")
@@ -98,6 +109,8 @@ if "utilisateur" in st.session_state:
             response = supabase.table("historique_sessions").select("*").execute()
             histo = pd.DataFrame(response.data)
             histo.columns = [col.strip().lower() for col in histo.columns]
+            # Même normalisation
+            histo = histo.rename(columns=lambda x: rename_map.get(x, x))
 
             user_login = st.session_state["utilisateur"]["Login"]
             histo_user = histo[histo["login"] == user_login]

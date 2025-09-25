@@ -79,7 +79,7 @@ if "utilisateur" in st.session_state:
         # Détails graphiques si DetailsQuestions existe
         import ast
         if "DetailsQuestions" in histo_user.columns and not histo_user["DetailsQuestions"].dropna().empty:
-            details_exploded = histo_user["DetailsQuestions"].dropna().apply(ast.literal_eval).explode()
+            details_exploded = histo_user["details_questions"].dropna().apply(ast.literal_eval).explode()
             questions_details_df = pd.DataFrame(details_exploded.tolist())
 
             if not questions_details_df.empty:
@@ -106,8 +106,9 @@ if "utilisateur" in st.session_state:
             response = supabase.table("historique_sessions").select("*").execute()
             histo = pd.DataFrame(response.data)
             user_login = st.session_state["utilisateur"]["Login"]
-            histo.columns = [col.lower() for col in histo.columns]
+            histo.columns = [col.strip().lower() for col in histo.columns]
             histo_user = histo[histo["login"] == user_login]
+            st.write("Colonnes dans le DataFrame histo :", histo.columns.tolist())
 
 
             if histo_user.empty:
@@ -116,10 +117,10 @@ if "utilisateur" in st.session_state:
                 # === METRICS GLOBALES ===
                 col1, col2 = st.columns(2)
                 col1.metric("📅 Sessions effectuées", len(histo_user))
-                col2.metric("❓ Questions générées", histo_user["NbQuestions"].sum())
+                col2.metric("❓ Questions générées", histo_user["nb_questions"].sum())
 
                 # Conversion de la colonne 'DetailsQuestions' de str vers list de dicts
-                details_exploded = histo_user["DetailsQuestions"].dropna().apply(ast.literal_eval).explode()
+                details_exploded = histo_user["details_questions"].dropna().apply(ast.literal_eval).explode()
 
                 # Tu obtiens une liste de dictionnaires, on la convertit en DataFrame
                 questions_details_df = pd.DataFrame(details_exploded.tolist())

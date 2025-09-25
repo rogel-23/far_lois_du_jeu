@@ -112,14 +112,29 @@ if "utilisateur" in st.session_state:
         if os.path.exists(historique_path):
             response = supabase.table("historique_sessions").select("*").execute()
             histo = pd.DataFrame(response.data)
-            histo.columns = [col.strip().lower() for col in histo.columns]
-            # Même normalisation
-            histo = histo.rename(columns=lambda x: rename_map.get(x, x))
 
-            user_login = st.session_state["utilisateur"]["Login"]
-            st.write("Colonnes disponibles :", histo.columns.tolist())
-            histo_user = histo[histo["login"] == user_login]
-            st.write("Colonnes dans le DataFrame histo :", histo.columns.tolist())
+            if histo.empty:
+                st.warning("⚠️ Aucune donnée trouvée dans la table Supabase `historique_sessions`.")
+            else:
+                # Harmonisation des noms de colonnes
+                histo.columns = [col.strip() for col in histo.columns]
+                histo = histo.rename(columns=lambda x: rename_map.get(x, x))
+
+                st.write("Colonnes disponibles après normalisation :", histo.columns.tolist())
+
+                user_login = st.session_state["utilisateur"]["Login"]
+
+                if "login" not in histo.columns:
+                    st.error("❌ La colonne 'login' est absente de la table Supabase. Vérifie le schéma.")
+                else:
+                    histo_user = histo[histo["login"] == user_login]
+
+                    if histo_user.empty:
+                        st.info("ℹ️ Aucune session enregistrée pour cet utilisateur.")
+                    else:
+                        st.success(f"✅ {len(histo_user)} sessions trouvées pour {user_login}")
+                        st.write("Aperçu des données :", histo_user.head())
+
 
 
             if histo_user.empty:

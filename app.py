@@ -264,14 +264,17 @@ if "utilisateur" in st.session_state:
     def enregistrer_session(user_login, questions_df_tirees):
         questions_infos = questions_df_tirees[["Loi", "Format", "Type", "Niveau"]].astype(str).to_dict(orient="records")
 
+        # On garde les mêmes noms de colonnes que le CSV
         data = {
-            "login": user_login,
-            "date": datetime.now().isoformat(),
-            "nb_questions": len(questions_df_tirees),
-            "details_questions": questions_infos
+            "Login": user_login,
+            "Date": datetime.now().isoformat(),
+            "NbQuestions": len(questions_df_tirees),
+            "DetailsQuestions": str(questions_infos)  # stocké en texte JSON
         }
 
-        supabase.table("historique_sessions").insert(data).execute()
+        res = supabase.table("historique_sessions").insert(data).execute()
+        st.write("Résultat insertion :", res)
+
 
 
 

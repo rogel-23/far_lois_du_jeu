@@ -257,8 +257,12 @@ if "utilisateur" in st.session_state:
     ]
 
     def enregistrer_session(user_login, questions_df_tirees):
-        # ⚠️ garder uniquement les questions répondues
-        questions_repondues = questions_df_tirees[questions_df_tirees.get("repondu", False) == True]
+        # ✅ Ajouter la colonne 'repondu' si elle n'existe pas encore
+        if "repondu" not in questions_df_tirees.columns:
+            questions_df_tirees["repondu"] = False
+
+        # ✅ Garder uniquement les questions marquées comme répondues
+        questions_repondues = questions_df_tirees[questions_df_tirees["repondu"] == True]
 
         if questions_repondues.empty:
             st.warning("⚠️ Aucune question réellement travaillée, session non enregistrée.")
@@ -273,12 +277,12 @@ if "utilisateur" in st.session_state:
             "detailsquestions": json.dumps(questions_infos, ensure_ascii=False)
         }
 
-        res = supabase.table("historique_sessions").insert([data]).execute()
-        st.success("✅ Session enregistrée dans Supabase")
-
-
-
-
+        try:
+            res = supabase.table("historique_sessions").insert([data]).execute()
+            st.success("✅ Session enregistrée dans Supabase")
+            st.write("📦 Données envoyées :", data)  # debug
+        except Exception as e:
+            st.error(f"❌ Erreur lors de l'insertion Supabase : {e}")
 
 
     # === TIRAGE ALÉATOIRE ===

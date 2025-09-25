@@ -38,17 +38,21 @@ if "utilisateur" in st.session_state:
     if st.session_state["utilisateur"]["Login"] == "admin":
         st.subheader("📊 Suivi global de la participation")
 
-        histo = pd.read_csv("historique_sessions.csv")
-        histo.columns = [col.strip().lower() for col in histo.columns]
+        response = supabase.table("historique_sessions").select("*").execute()
+        histo = pd.DataFrame(response.data)
 
-        # Normalisation
-        rename_map = {
-            "login": "login",
-            "date": "date",
-            "nbquestions": "nb_questions",
-            "detailsquestions": "details_questions"
-        }
-        histo = histo.rename(columns=lambda x: rename_map.get(x, x))
+        if histo.empty:
+            st.warning("⚠️ Aucune donnée trouvée dans Supabase.")
+        else:
+            # Normalisation
+            rename_map = {
+                "login": "login",
+                "date": "date",
+                "nbquestions": "nb_questions",
+                "detailsquestions": "details_questions"
+            }
+            histo = histo.rename(columns=lambda x: rename_map.get(x, x))
+
 
         # Ajout des colonnes utiles
         stats = histo.groupby("login").agg({
@@ -124,7 +128,12 @@ if "utilisateur" in st.session_state:
                 st.warning("⚠️ Aucune donnée trouvée dans la table Supabase `historique_sessions`.")
             else:
                 # Harmonisation des noms de colonnes
-                histo.columns = [col.strip() for col in histo.columns]
+                rename_map = {
+                    "login": "login",
+                    "date": "date",
+                    "nbquestions": "nb_questions",
+                    "detailsquestions": "details_questions"
+                }
                 histo = histo.rename(columns=lambda x: rename_map.get(x, x))
 
                 st.write("Colonnes disponibles après normalisation :", histo.columns.tolist())

@@ -159,10 +159,8 @@ if "utilisateur" in st.session_state:
                         with colf2:
                             st.markdown("### 🎯 Répartition par Niveau")
                             ordre_niveaux = ["Facile", "Moyen", "Difficile"]
-
                             niveaux_counts = questions_details_df["Niveau"].value_counts()
                             niveaux_counts = niveaux_counts.reindex(ordre_niveaux).fillna(0)
-
                             st.bar_chart(niveaux_counts)
 
                         st.markdown("### 📂 Répartition par Type")

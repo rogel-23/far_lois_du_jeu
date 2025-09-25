@@ -150,7 +150,22 @@ if "utilisateur" in st.session_state:
 
                     if not questions_details_df.empty:
                         st.markdown("### 📚 Répartition par Loi")
-                        st.bar_chart(questions_details_df["Loi"].value_counts())
+
+                        # Ordre attendu des lois
+                        ordre_lois = [str(i) for i in range(1, 18)] + ["Définition", "Autre"]
+
+                        # Comptage
+                        lois_counts = questions_details_df["Loi"].value_counts()
+                        lois_counts = lois_counts.reindex(ordre_lois).fillna(0)
+
+                        # DataFrame pour respecter l'ordre
+                        df_lois = pd.DataFrame({
+                            "Loi": lois_counts.index,
+                            "Nombre": lois_counts.values
+                        })
+
+                        st.bar_chart(df_lois.set_index("Loi"))
+
 
                         colf1, colf2 = st.columns(2)
                         with colf1:

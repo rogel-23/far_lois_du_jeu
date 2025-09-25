@@ -41,17 +41,16 @@ if "utilisateur" in st.session_state:
         response = supabase.table("historique_sessions").select("*").execute()
         histo = pd.DataFrame(response.data)
 
-
         if histo.empty:
             st.warning("⚠️ Aucune donnée trouvée dans Supabase.")
         else:
-            # Ajout des colonnes utiles
+            # Agrégations
             stats = histo.groupby("login").agg({
                 "date": "count",
-                "nb_questions": "sum",
+                "nbquestions": "sum",
             }).rename(columns={
                 "date": "Sessions",
-                "nb_questions": "Questions générées"
+                "nbquestions": "Questions générées"
             })
             stats["Moyenne Q/session"] = (stats["Questions générées"] / stats["Sessions"]).round(2)
 
@@ -67,57 +66,52 @@ if "utilisateur" in st.session_state:
         comptes_df = pd.read_csv("comptes_arbitres.csv", dtype=str)
         logins = comptes_df[comptes_df["Login"] != "admin"]["Login"].tolist()
         login_selectionne = st.selectbox("Sélectionnez un arbitre :", logins)
-        st.write("Colonnes disponibles :", histo.columns.tolist())      
-        histo_user = histo[histo["login"] == login_selectionne]
-        compte_user = comptes_df[comptes_df["Login"] == login_selectionne].iloc[0]
 
-        st.markdown(f"### 👤 {compte_user['Prénom']} {compte_user['Nom']}")
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Sessions", len(histo_user))
-        col2.metric("Questions générées", histo_user["nb_questions"].sum())
-        col3.metric("Dernière session", histo_user["date"].max())
+        if not histo.empty:
+            histo_user = histo[histo["login"] == login_selectionne]
+            compte_user = comptes_df[comptes_df["Login"] == login_selectionne].iloc[0]
 
-        st.markdown("#### 📄 Sessions récentes")
-        st.dataframe(histo_user.sort_values("date", ascending=False).reset_index(drop=True))
+            st.markdown(f"### 👤 {compte_user['Prénom']} {compte_user['Nom']}")
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Sessions", len(histo_user))
+            col2.metric("Questions générées", histo_user["nbquestions"].sum())
+            col3.metric("Dernière session", histo_user["date"].max())
 
-        # Détails graphiques
-        if "details_questions" in histo_user.columns and not histo_user["details_questions"].dropna().empty:
-            details_exploded = (
-                histo_user["details_questions"]
-                .dropna()
-                .apply(lambda x: json.loads(x) if isinstance(x, str) else x)
-                .explode()
-            )
-            questions_details_df = pd.DataFrame(details_exploded.tolist())
+            st.markdown("#### 📄 Sessions récentes")
+            st.dataframe(histo_user.sort_values("date", ascending=False).reset_index(drop=True))
 
-            if not questions_details_df.empty:
-                st.markdown("#### 📚 Lois les plus travaillées")
-                st.bar_chart(questions_details_df["Loi"].value_counts())
-
-                colf1, colf2 = st.columns(2)
-                colf1.markdown("#### 📝 Formats les plus fréquents")
-                colf1.bar_chart(questions_details_df["Format"].value_counts())
-
-                colf2.markdown("#### 🎯 Niveaux travaillés")
-                colf2.bar_chart(questions_details_df["Niveau"].value_counts())
+            # Détails graphiques
+            if "detailsquestions" in histo_user.columns and not histo_user["detailsquestions"].dropna().empty:
+                details_exploded = (
+                    histo_user["detailsquestions"]
+                    .dropna()
+                    .apply(lambda x: json.loads(x) if isinstance(x, str) else x)
+                    .explode()
+                )
+                questions_details_df = pd.DataFrame(details_exploded.tolist())
 
 
+                if not questions_details_df.empty:
+                    st.markdown("#### 📚 Lois les plus travaillées")
+                    st.bar_chart(questions_details_df["Loi"].value_counts())
+
+                    colf1, colf2 = st.columns(2)
+                    colf1.markdown("#### 📝 Formats les plus fréquents")
+                    colf1.bar_chart(questions_details_df["Format"].value_counts())
+
+                    colf2.markdown("#### 🎯 Niveaux travaillés")
+                    colf2.bar_chart(questions_details_df["Niveau"].value_counts())
 
 
     if st.session_state["utilisateur"]["Login"] != "admin":
-        # === TABLEAU DE BORD PERSONNEL ===
         st.subheader("📊 Mon tableau de bord")
 
-        # Lecture de l'historique complet depuis Supabase
         response = supabase.table("historique_sessions").select("*").execute()
-        st.write("🔍 Réponse Supabase :", response)  # debug
         histo = pd.DataFrame(response.data)
 
         if histo.empty:
             st.warning("⚠️ Aucune donnée trouvée dans la table Supabase `historique_sessions`.")
         else:
-            st.write("Colonnes disponibles après normalisation :", histo.columns.tolist())
-
             user_login = st.session_state["utilisateur"]["Login"]
 
             if "login" not in histo.columns:
@@ -128,20 +122,19 @@ if "utilisateur" in st.session_state:
                 if histo_user.empty:
                     st.info("ℹ️ Aucune session enregistrée pour cet utilisateur.")
                 else:
-                    # === METRICS GLOBALES ===
                     col1, col2 = st.columns(2)
                     col1.metric("📅 Sessions effectuées", len(histo_user))
-                    col2.metric("❓ Questions générées", histo_user["nb_questions"].sum())
+                    col2.metric("❓ Questions générées", histo_user["nbquestions"].sum())
 
-                    # Conversion de 'DetailsQuestions' si dispo
-                    if "details_questions" in histo_user.columns:
+                    if "detailsquestions" in histo_user.columns:
                         details_exploded = (
-                            histo_user["details_questions"]
+                            histo_user["detailsquestions"]
                             .dropna()
                             .apply(lambda x: json.loads(x) if isinstance(x, str) else x)
                             .explode()
                         )
                         questions_details_df = pd.DataFrame(details_exploded.tolist())
+
 
                         if not questions_details_df.empty:
                             lois_counts = questions_details_df["Loi"].value_counts().head(5)
@@ -156,6 +149,7 @@ if "utilisateur" in st.session_state:
                             niveaux_counts = questions_details_df["Niveau"].value_counts()
                             col4.markdown("### 🎯 Niveaux")
                             col4.bar_chart(niveaux_counts)
+
 
 
     # === CHARGEMENT DES QUESTIONS ===

@@ -105,8 +105,9 @@ if "utilisateur" in st.session_state:
         if os.path.exists(historique_path):
             response = supabase.table("historique_sessions").select("*").execute()
             histo = pd.DataFrame(response.data)
-            user_login = st.session_state["utilisateur"]["Login"]
             histo.columns = [col.strip().lower() for col in histo.columns]
+
+            user_login = st.session_state["utilisateur"]["Login"]
             histo_user = histo[histo["login"] == user_login]
             st.write("Colonnes dans le DataFrame histo :", histo.columns.tolist())
 

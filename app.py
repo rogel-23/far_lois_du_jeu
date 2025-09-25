@@ -38,6 +38,7 @@ if "utilisateur" in st.session_state:
         st.subheader("📊 Suivi global de la participation")
 
         histo = pd.read_csv("historique_sessions.csv")
+        histo.columns = [col.strip().lower() for col in histo.columns]
 
         # Ajout des colonnes utiles
         stats = histo.groupby("Login").agg({

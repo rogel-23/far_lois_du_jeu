@@ -105,6 +105,7 @@ if "utilisateur" in st.session_state:
 
     # === TABLEAU DE BORD UTILISATEUR ===
     if st.session_state["utilisateur"]["Login"] != "admin":
+        st.subheader("📊 Mon tableau de bord")
 
         response = supabase.table("historique_sessions").select("*").execute()
         histo = pd.DataFrame(response.data)
@@ -119,37 +120,49 @@ if "utilisateur" in st.session_state:
                 st.info("ℹ️ Aucune session enregistrée pour cet utilisateur.")
             else:
                 # === ENCADRÉ STATS ===
-                with st.container():
-                    st.markdown(
-                        """
-                        <div style="
-                            border:2px solid #4CAF50;
-                            border-radius:10px;
-                            padding:15px;
-                            margin-bottom:20px;
-                            background-color:#f9fff9;">
-                            <h3>📈 Mes statistiques</h3>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
+                st.markdown(
+                    """
+                    <div style="
+                        border:2px solid #4CAF50;
+                        border-radius:10px;
+                        padding:15px;
+                        margin-bottom:20px;
+                        background-color:#f9fff9;">
+                        <h3>📈 Mes statistiques</h3>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+                col1, col2 = st.columns(2)
+                col1.metric("📅 Sessions effectuées", len(histo_user))
+                col2.metric("❓ Questions générées", histo_user["nbquestions"].sum())
+
+                # === DÉTAIL DES QUESTIONS ===
+                if "detailsquestions" in histo_user.columns:
+                    details_exploded = (
+                        histo_user["detailsquestions"]
+                        .dropna()
+                        .apply(lambda x: json.loads(x) if isinstance(x, str) else x)
+                        .explode()
                     )
+                    questions_details_df = pd.DataFrame(details_exploded.tolist())
 
-                    col1, col2 = st.columns(2)
-                    col1.metric("📅 Sessions effectuées", len(histo_user))
-                    col2.metric("❓ Questions générées", histo_user["nbquestions"].sum())
+                    if not questions_details_df.empty:
+                        st.markdown("### 📚 Répartition par Loi")
+                        st.bar_chart(questions_details_df["Loi"].value_counts())
 
-                    if "detailsquestions" in histo_user.columns:
-                        details_exploded = (
-                            histo_user["detailsquestions"]
-                            .dropna()
-                            .apply(lambda x: json.loads(x) if isinstance(x, str) else x)
-                            .explode()
-                        )
-                        questions_details_df = pd.DataFrame(details_exploded.tolist())
+                        colf1, colf2 = st.columns(2)
+                        with colf1:
+                            st.markdown("### 📝 Répartition Ouvertes / QCM")
+                            st.bar_chart(questions_details_df["Format"].value_counts())
+                        with colf2:
+                            st.markdown("### 🎯 Répartition par Niveau")
+                            st.bar_chart(questions_details_df["Niveau"].value_counts())
 
-                        if not questions_details_df.empty:
-                            lois_counts = questions_details_df["Loi"].value_counts().head(5)
-                            st.bar_chart(lois_counts)
+                        st.markdown("### 📂 Répartition par Type")
+                        st.bar_chart(questions_details_df["Type"].value_counts())
+
 
         # === ENCADRÉ FILTRES ===
         st.markdown(

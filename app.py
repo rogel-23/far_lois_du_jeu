@@ -375,6 +375,7 @@ if "utilisateur" in st.session_state:
             unsafe_allow_html=True
         )
 
+        st.markdown(" ")
 
         for i, row in st.session_state["questions_tirees"].iterrows():
             # Encadré visuel

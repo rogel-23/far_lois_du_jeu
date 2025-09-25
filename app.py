@@ -431,17 +431,18 @@ if "utilisateur" in st.session_state:
         # === STYLE SPÉCIFIQUE POUR LE BOUTON SAUVEGARDE ===
         st.markdown("""
             <style>
-            .save-session button {
+            div[data-testid="stButton"][id="save_button"] button {
                 background-color: #4CAF50 !important;
-                color:white !important;
-                font-size:20px !important;
-                font-weight:bold !important;
-                padding:15px 30px !important;
-                border-radius:10px !important;
+                color: white !important;
+                font-size: 20px !important;
+                font-weight: bold !important;
+                padding: 15px 30px !important;
+                border-radius: 10px !important;
+                border: none !important;
             }
-            .save-session button:hover {
+            div[data-testid="stButton"][id="save_button"] button:hover {
                 background-color: #45a049 !important;
-                color:white !important;
+                color: white !important;
             }
             .button-right {
                 display: flex;
@@ -464,10 +465,9 @@ if "utilisateur" in st.session_state:
 
         # === ENREGISTREMENT DE LA SESSION ===
         with st.container():
-            st.markdown('<div class="button-right save-session">', unsafe_allow_html=True)
+            st.markdown('<div class="button-right">', unsafe_allow_html=True)
             if st.button("📥 Sauvegarder la session", key="save_button"):
                 user_login = st.session_state["utilisateur"]["Login"]
                 enregistrer_session(user_login, st.session_state["questions_tirees"])
                 st.markdown('<div class="confirmation">✅ Session enregistrée avec succès</div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
-

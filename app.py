@@ -290,11 +290,17 @@ if "utilisateur" in st.session_state:
         if filtered_df.empty:
             st.warning("Aucune question ne correspond aux filtres sélectionnés.")
         else:
-            st.session_state["questions_tirees"] = filtered_df.sample(min(nb_questions, len(filtered_df))).reset_index(drop=True)
-            user_login = st.session_state["utilisateur"]["Login"]
-            enregistrer_session(user_login, st.session_state["questions_tirees"])
-            st.rerun()
+            # Tirage aléatoire
+            st.session_state["questions_tirees"] = (
+                filtered_df
+                .sample(min(nb_questions, len(filtered_df)))
+                .reset_index(drop=True)
+            )
 
+            # ✅ Initialiser la colonne 'repondu'
+            st.session_state["questions_tirees"]["repondu"] = False
+
+            st.success(f"{len(st.session_state['questions_tirees'])} question(s) générée(s).")
 
 
     # === ESPACE VISUEL DE TRANSITION ===
@@ -307,7 +313,7 @@ if "utilisateur" in st.session_state:
         st.header("📋 Questions tirées")
 
         for i, row in st.session_state["questions_tirees"].iterrows():
-            # Encadré visuel + question formatée
+            # Encadré visuel
             question_formatee = str(row["Question"]).replace("\n", "  \n")
             st.markdown(
                 f"""
@@ -324,7 +330,7 @@ if "utilisateur" in st.session_state:
                 unsafe_allow_html=True
             )
 
-            # 🏷️ Éléments contextuels
+            # Éléments contextuels
             col1, col2, col3, col4, col5 = st.columns(5)
             col1.markdown(f"<div style='background-color:#d3d3d3; padding:5px; border-radius:5px; text-align:center;'>ID : {row['ID']}</div>", unsafe_allow_html=True)
             col2.markdown(f"<div style='background-color:#f0ad4e; padding:5px; border-radius:5px; text-align:center;'>Loi : {row['Loi']}</div>", unsafe_allow_html=True)
@@ -342,7 +348,6 @@ if "utilisateur" in st.session_state:
                     if selected_prop != "---":
                         reponse_formatee = str(row["Réponse attendue"]).replace("\n", "  \n")
                         st.success(f"**Réponse attendue :**  \n{reponse_formatee}")
-                        # ✅ Marquer comme répondu
                         st.session_state["questions_tirees"].at[i, "repondu"] = True
                     else:
                         st.warning("👉 Merci de sélectionner une réponse avant d’afficher la correction.")
@@ -354,8 +359,12 @@ if "utilisateur" in st.session_state:
                     if user_answer.strip():
                         reponse_formatee = str(row["Réponse attendue"]).replace("\n", "  \n")
                         st.success(f"**Réponse attendue :**  \n{reponse_formatee}")
-                        # ✅ Marquer comme répondu
                         st.session_state["questions_tirees"].at[i, "repondu"] = True
                     else:
                         st.warning("✍️ Merci d’écrire une réponse avant de consulter la correction.")
 
+
+        # === ENREGISTREMENT DE LA SESSION ===
+        if st.button("📥 Sauvegarder la session"):
+            user_login = st.session_state["utilisateur"]["Login"]
+            enregistrer_session(user_login, st.session_state["questions_tirees"])

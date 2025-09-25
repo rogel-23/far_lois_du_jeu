@@ -105,7 +105,6 @@ if "utilisateur" in st.session_state:
 
     # === TABLEAU DE BORD UTILISATEUR ===
     if st.session_state["utilisateur"]["Login"] != "admin":
-        st.subheader("📊 Mon tableau de bord")
 
         response = supabase.table("historique_sessions").select("*").execute()
         histo = pd.DataFrame(response.data)
@@ -195,7 +194,7 @@ if "utilisateur" in st.session_state:
         st.markdown(" ")
         st.markdown("---")
         st.markdown(" ")
-        
+
         # === ENCADRÉ FILTRES ===
         st.markdown(
             """
@@ -435,7 +434,25 @@ if "utilisateur" in st.session_state:
                         st.warning("✍️ Merci d’écrire une réponse avant de consulter la correction.")
 
 
-        # === ENREGISTREMENT DE LA SESSION ===
+        # Appliquer un style global aux boutons Streamlit
+        st.markdown("""
+            <style>
+            div.stButton > button:first-child {
+                background-color: #4CAF50;
+                color:white;
+                font-size:20px;
+                font-weight:bold;
+                padding:15px 30px;
+                border-radius:10px;
+            }
+            div.stButton > button:first-child:hover {
+                background-color: #45a049;
+                color:white;
+            }
+            </style>
+        """, unsafe_allow_html=True)
+
+        # Ton bouton reste fonctionnel mais plus visible
         if st.button("📥 Sauvegarder la session"):
             user_login = st.session_state["utilisateur"]["Login"]
             enregistrer_session(user_login, st.session_state["questions_tirees"])

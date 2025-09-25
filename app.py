@@ -302,7 +302,22 @@ if "utilisateur" in st.session_state:
         st.header("📋 Questions tirées")
 
         for i, row in st.session_state["questions_tirees"].iterrows():
-            st.markdown(f"### ❓ Question {i+1}")
+            # Encadré visuel + question formatée
+            question_formatee = str(row["Question"]).replace("\n", "  \n")
+            st.markdown(
+                f"""
+                <div style="
+                    border:2px solid #ccc;
+                    border-radius:10px;
+                    padding:15px;
+                    margin-bottom:20px;
+                    background-color:#f9f9f9;">
+                    <h3>❓ Question {i+1}</h3>
+                    <p><b>{question_formatee}</b></p>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
             # 🏷️ Éléments contextuels
             col1, col2, col3, col4, col5 = st.columns(5)
@@ -312,17 +327,31 @@ if "utilisateur" in st.session_state:
             col4.markdown(f"<div style='background-color:#5cb85c; padding:5px; border-radius:5px; text-align:center;'>Niveau : {row['Niveau']}</div>", unsafe_allow_html=True)
             col5.markdown(f"<div style='background-color:#d9534f; padding:5px; border-radius:5px; text-align:center;'>Source : {row['Source']}</div>", unsafe_allow_html=True)
 
-            # 🧾 Question
-            st.markdown(f"**{row['Question']}**")
-
-            # ✅ Si QCM → affichage boutons cliquables
+            # ✅ Cas 1 : QCM
             if "qcm" in row["Format"].lower() and pd.notna(row["Propositions"]):
                 propositions = [p.strip() for p in str(row["Propositions"]).split("\n") if p.strip()]
-                selected_prop = st.radio("Choisissez votre réponse :", propositions, key=f"qcm_{i}")
-            else:
-                st.text_area("Votre réponse :", key=f"reponse_{i}")
+                propositions = ["---"] + propositions  # "---" comme valeur neutre
+                selected_prop = st.radio(
+                    "Choisissez votre réponse :", 
+                    propositions, 
+                    key=f"qcm_{i}", 
+                    index=0
+                )
 
-            # 👁️ Affichage réponse
-            if st.button(f"👁️ Voir la réponse (Question {i+1})", key=f"btn_{i}"):
-                reponse_formatee = str(row["Réponse attendue"]).replace("\n", "  \n")  # Pour retour à la ligne
-                st.success(f"**Réponse attendue :**  \n{reponse_formatee}")
+                if st.button(f"👁️ Voir la réponse QCM (Question {i+1})", key=f"btn_qcm_{i}"):
+                    if selected_prop != "---":
+                        reponse_formatee = str(row["Réponse attendue"]).replace("\n", "  \n")
+                        st.success(f"**Réponse attendue :**  \n{reponse_formatee}")
+                    else:
+                        st.warning("👉 Merci de sélectionner une réponse avant d’afficher la correction.")
+
+            # ✅ Cas 2 : Question ouverte
+            else:
+                user_answer = st.text_area("Votre réponse :", key=f"reponse_{i}")
+
+                if st.button(f"👁️ Voir la réponse ouverte (Question {i+1})", key=f"btn_open_{i}"):
+                    if user_answer.strip():  # Vérifie que ce n’est pas vide
+                        reponse_formatee = str(row["Réponse attendue"]).replace("\n", "  \n")
+                        st.success(f"**Réponse attendue :**  \n{reponse_formatee}")
+                    else:
+                        st.warning("✍️ Merci d’écrire une réponse avant de consulter la correction.")

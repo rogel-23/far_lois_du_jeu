@@ -150,20 +150,17 @@ if "utilisateur" in st.session_state:
                     if not questions_details_df.empty:
                         st.markdown("### 📚 Répartition par Loi")
 
-                        # Ordre attendu des lois
+                        # Définir l’ordre des lois
                         ordre_lois = [str(i) for i in range(1, 18)] + ["Définition", "Autre"]
 
-                        # Comptage
-                        lois_counts = questions_details_df["Loi"].value_counts()
-                        lois_counts = lois_counts.reindex(ordre_lois).fillna(0)
+                        # Forcer l’ordre avec une Categorical
+                        questions_details_df["Loi"] = pd.Categorical(
+                            questions_details_df["Loi"], categories=ordre_lois, ordered=True
+                        )
 
-                        # DataFrame pour respecter l'ordre
-                        df_lois = pd.DataFrame({
-                            "Loi": lois_counts.index,
-                            "Nombre": lois_counts.values
-                        })
+                        lois_counts = questions_details_df["Loi"].value_counts().reindex(ordre_lois, fill_value=0)
+                        st.bar_chart(lois_counts)
 
-                        st.bar_chart(df_lois.set_index("Loi"))
 
 
                         colf1, colf2 = st.columns(2)
@@ -172,18 +169,15 @@ if "utilisateur" in st.session_state:
                             st.bar_chart(questions_details_df["Format"].value_counts())
                         with colf2:
                             st.markdown("### 🎯 Répartition par Niveau")
+
                             ordre_niveaux = ["Facile", "Moyen", "Difficile"]
 
-                            niveaux_counts = questions_details_df["Niveau"].value_counts()
-                            niveaux_counts = niveaux_counts.reindex(ordre_niveaux).fillna(0)
+                            questions_details_df["Niveau"] = pd.Categorical(
+                                questions_details_df["Niveau"], categories=ordre_niveaux, ordered=True
+                            )
 
-                            # Construire un DataFrame pour garder l'ordre
-                            df_niveaux = pd.DataFrame({
-                                "Niveau": niveaux_counts.index,
-                                "Nombre": niveaux_counts.values
-                            })
-
-                            st.bar_chart(df_niveaux.set_index("Niveau"))
+                            niveaux_counts = questions_details_df["Niveau"].value_counts().reindex(ordre_niveaux, fill_value=0)
+                            st.bar_chart(niveaux_counts)
 
                         st.markdown("### 📂 Répartition par Type")
                         st.bar_chart(questions_details_df["Type"].value_counts())

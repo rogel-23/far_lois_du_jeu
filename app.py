@@ -132,41 +132,30 @@ if "utilisateur" in st.session_state:
                     if histo_user.empty:
                         st.info("ℹ️ Aucune session enregistrée pour cet utilisateur.")
                     else:
-                        st.success(f"✅ {len(histo_user)} sessions trouvées pour {user_login}")
-                        st.write("Aperçu des données :", histo_user.head())
+                        # === METRICS GLOBALES ===
+                        col1, col2 = st.columns(2)
+                        col1.metric("📅 Sessions effectuées", len(histo_user))
+                        col2.metric("❓ Questions générées", histo_user["nb_questions"].sum())
 
+                        # Conversion de 'DetailsQuestions' si dispo
+                        if "details_questions" in histo_user.columns:
+                            details_exploded = histo_user["details_questions"].dropna().apply(ast.literal_eval).explode()
+                            questions_details_df = pd.DataFrame(details_exploded.tolist())
 
+                            if not questions_details_df.empty:
+                                lois_counts = questions_details_df["Loi"].value_counts().head(5)
+                                st.markdown("### 📚 Lois les plus travaillées")
+                                st.bar_chart(lois_counts)
 
-            if histo_user.empty:
-                st.info("Aucune session enregistrée pour le moment.")
-            else:
-                # === METRICS GLOBALES ===
-                col1, col2 = st.columns(2)
-                col1.metric("📅 Sessions effectuées", len(histo_user))
-                col2.metric("❓ Questions générées", histo_user["nb_questions"].sum())
+                                formats_counts = questions_details_df["Format"].value_counts()
+                                col3, col4 = st.columns(2)
+                                col3.markdown("### 📝 Formats")
+                                col3.bar_chart(formats_counts)
 
-                # Conversion de la colonne 'DetailsQuestions' de str vers list de dicts
-                details_exploded = histo_user["details_questions"].dropna().apply(ast.literal_eval).explode()
+                                niveaux_counts = questions_details_df["Niveau"].value_counts()
+                                col4.markdown("### 🎯 Niveaux")
+                                col4.bar_chart(niveaux_counts)
 
-                # Tu obtiens une liste de dictionnaires, on la convertit en DataFrame
-                questions_details_df = pd.DataFrame(details_exploded.tolist())
-
-                if not questions_details_df.empty:
-                    # 📚 Lois les plus fréquentes
-                    lois_counts = questions_details_df["Loi"].value_counts().head(5)
-                    st.markdown("### 📚 Lois les plus travaillées")
-                    st.bar_chart(lois_counts)
-
-                    # 📝 Formats
-                    formats_counts = questions_details_df["Format"].value_counts()
-                    col3, col4 = st.columns(2)
-                    col3.markdown("### 📝 Formats")
-                    col3.bar_chart(formats_counts)
-
-                    # 🎯 Niveaux
-                    niveaux_counts = questions_details_df["Niveau"].value_counts()
-                    col4.markdown("### 🎯 Niveaux")
-                    col4.bar_chart(niveaux_counts)
 
         else:
             st.info("Aucune donnée d’historique trouvée.")

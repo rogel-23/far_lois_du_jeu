@@ -41,17 +41,17 @@ if "utilisateur" in st.session_state:
         histo.columns = [col.strip().lower() for col in histo.columns]
 
         # Ajout des colonnes utiles
-        stats = histo.groupby("Login").agg({
-            "Date": "count",
-            "NbQuestions": "sum",
+        stats = histo.groupby("login").agg({
+            "date": "count",
+            "nbquestions": "sum",
         }).rename(columns={
-            "Date": "Sessions",
-            "NbQuestions": "Questions générées"
+            "date": "Sessions",
+            "nbquestions": "Questions générées"
         })
         stats["Moyenne Q/session"] = (stats["Questions générées"] / stats["Sessions"]).round(2)
 
         # Dernière session
-        last_sessions = histo.groupby("Login")["Date"].max().rename("Dernière session")
+        last_sessions = histo.groupby("login")["date"].max().rename("Dernière session")
         stats = stats.join(last_sessions)
 
         st.dataframe(stats.sort_values("Sessions", ascending=False))
@@ -59,28 +59,25 @@ if "utilisateur" in st.session_state:
         # Vue par arbitre
         st.markdown("## 🔎 Détail par arbitre")
 
-        # Lecture du fichier comptes pour noms/prénoms
         comptes_df = pd.read_csv("comptes_arbitres.csv", dtype=str)
         logins = comptes_df[comptes_df["Login"] != "admin"]["Login"].tolist()
         login_selectionne = st.selectbox("Sélectionnez un arbitre :", logins)
 
-        histo_user = histo[histo["Login"] == login_selectionne]
+        histo_user = histo[histo["login"] == login_selectionne]
         compte_user = comptes_df[comptes_df["Login"] == login_selectionne].iloc[0]
 
         st.markdown(f"### 👤 {compte_user['Prénom']} {compte_user['Nom']}")
         col1, col2, col3 = st.columns(3)
         col1.metric("Sessions", len(histo_user))
-        col2.metric("Questions générées", histo_user["NbQuestions"].sum())
-        col3.metric("Dernière session", histo_user["Date"].max())
+        col2.metric("Questions générées", histo_user["nbquestions"].sum())
+        col3.metric("Dernière session", histo_user["date"].max())
 
-        # Affichage des sessions
         st.markdown("#### 📄 Sessions récentes")
-        st.dataframe(histo_user.sort_values("Date", ascending=False).reset_index(drop=True))
+        st.dataframe(histo_user.sort_values("date", ascending=False).reset_index(drop=True))
 
-        # Détails graphiques si DetailsQuestions existe
-        import ast
-        if "DetailsQuestions" in histo_user.columns and not histo_user["DetailsQuestions"].dropna().empty:
-            details_exploded = histo_user["details_questions"].dropna().apply(ast.literal_eval).explode()
+        # Détails graphiques
+        if "detailsquestions" in histo_user.columns and not histo_user["detailsquestions"].dropna().empty:
+            details_exploded = histo_user["detailsquestions"].dropna().apply(ast.literal_eval).explode()
             questions_details_df = pd.DataFrame(details_exploded.tolist())
 
             if not questions_details_df.empty:
@@ -88,13 +85,7 @@ if "utilisateur" in st.session_state:
                 st.bar_chart(questions_details_df["Loi"].value_counts())
 
                 colf1, colf2 = st.columns(2)
-                colf1.markdown("#### 📝 Formats les plus fréquents")
-                colf1.bar_chart(questions_details_df["Format"].value_counts())
 
-                colf2.markdown("#### 🎯 Niveaux travaillés")
-                colf2.bar_chart(questions_details_df["Niveau"].value_counts())
-        else:
-            st.info("Aucun détail de questions enregistré pour cet arbitre.")
 
 
     if st.session_state["utilisateur"]["Login"] != "admin":

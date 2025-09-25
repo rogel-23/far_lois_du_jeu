@@ -106,7 +106,9 @@ if "utilisateur" in st.session_state:
             response = supabase.table("historique_sessions").select("*").execute()
             histo = pd.DataFrame(response.data)
             user_login = st.session_state["utilisateur"]["Login"]
-            histo_user = histo[histo["Login"] == user_login]
+            histo.columns = [col.lower() for col in histo.columns]
+            histo_user = histo[histo["login"] == user_login]
+
 
             if histo_user.empty:
                 st.info("Aucune session enregistrée pour le moment.")

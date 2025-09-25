@@ -275,7 +275,7 @@ if "utilisateur" in st.session_state:
         st.write("🔍 Données envoyées à Supabase :", data)
 
         try:
-            res = supabase.table("historique_sessions").insert(data).execute()
+            res = supabase.table("historique_sessions").insert([data]).execute()
             st.success("✅ Session enregistrée dans Supabase")
             st.write(res)
         except Exception as e:

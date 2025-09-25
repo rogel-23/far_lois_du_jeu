@@ -360,7 +360,21 @@ if "utilisateur" in st.session_state:
 
     # === AFFICHAGE DES QUESTIONS ===
     if "questions_tirees" in st.session_state:
-        st.header("📋 Questions tirées")
+        # === ENCADRÉ QUESTIONS TIRÉES ===
+        st.markdown(
+            """
+            <div style="
+                border:2px solid #f44336;
+                border-radius:10px;
+                padding:15px;
+                margin-top:30px;
+                background-color:#fff5f5;">
+                <h3>📋 Questions tirées</h3>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
 
         for i, row in st.session_state["questions_tirees"].iterrows():
             # Encadré visuel

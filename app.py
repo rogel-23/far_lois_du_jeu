@@ -431,7 +431,7 @@ if "utilisateur" in st.session_state:
         # === STYLE SPÉCIFIQUE POUR LE BOUTON SAUVEGARDE ===
         st.markdown("""
             <style>
-            div[data-testid="stButton"][id="save_button"] button {
+            .save-session button {
                 background-color: #4CAF50 !important;
                 color: white !important;
                 font-size: 20px !important;
@@ -440,7 +440,7 @@ if "utilisateur" in st.session_state:
                 border-radius: 10px !important;
                 border: none !important;
             }
-            div[data-testid="stButton"][id="save_button"] button:hover {
+            .save-session button:hover {
                 background-color: #45a049 !important;
                 color: white !important;
             }
@@ -448,26 +448,14 @@ if "utilisateur" in st.session_state:
                 display: flex;
                 justify-content: flex-end;
             }
-            .confirmation {
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background-color: #4CAF50;
-                color: white;
-                padding: 12px 20px;
-                border-radius: 8px;
-                font-weight: bold;
-                box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
-                z-index: 9999;
-            }
             </style>
         """, unsafe_allow_html=True)
 
         # === ENREGISTREMENT DE LA SESSION ===
         with st.container():
-            st.markdown('<div class="button-right">', unsafe_allow_html=True)
-            if st.button("📥 Sauvegarder la session", key="save_button"):
+            st.markdown('<div class="button-right save-session">', unsafe_allow_html=True)
+            if st.button("📥 Sauvegarder la session"):
                 user_login = st.session_state["utilisateur"]["Login"]
                 enregistrer_session(user_login, st.session_state["questions_tirees"])
-                st.markdown('<div class="confirmation">✅ Session enregistrée avec succès</div>', unsafe_allow_html=True)
+                st.success("✅ Session enregistrée avec succès")
             st.markdown('</div>', unsafe_allow_html=True)

@@ -86,8 +86,8 @@ if "utilisateur" in st.session_state:
         st.dataframe(histo_user.sort_values("date", ascending=False).reset_index(drop=True))
 
         # Détails graphiques
-        if "detailsquestions" in histo_user.columns and not histo_user["detailsquestions"].dropna().empty:
-            details_exploded = histo_user["detailsquestions"].dropna().apply(ast.literal_eval).explode()
+        if "details_questions" in histo_user.columns and not histo_user["details_questions"].dropna().empty:
+            details_exploded = histo_user["details_questions"].dropna().apply(ast.literal_eval).explode()
             questions_details_df = pd.DataFrame(details_exploded.tolist())
 
             if not questions_details_df.empty:
@@ -272,8 +272,8 @@ if "utilisateur" in st.session_state:
         data = {
             "login": user_login,
             "date": datetime.now().isoformat(),
-            "nbquestions": len(questions_df_tirees),
-            "detailsquestions": json.dumps(questions_infos, ensure_ascii=False)
+            "nb_questions": len(questions_df_tirees),
+            "details_questions": json.dumps(questions_infos, ensure_ascii=False)
         }
 
         st.write("🔍 Données envoyées à Supabase :", data)

@@ -434,29 +434,33 @@ if "utilisateur" in st.session_state:
                         st.warning("✍️ Merci d’écrire une réponse avant de consulter la correction.")
 
 
-        save_clicked = st.markdown(
-            """
+        # === STYLE BOUTON SAUVEGARDE ===
+        st.markdown("""
             <style>
-            .big-button {
-                display: inline-block;
-                padding: 15px 30px;
-                font-size: 20px;
-                font-weight: bold;
-                color: white;
+            div.stButton > button:first-child {
                 background-color: #4CAF50;
-                border: none;
-                border-radius: 10px;
-                cursor: pointer;
-                text-align: center;
-                transition: 0.3s;
+                color:white;
+                font-size:20px;
+                font-weight:bold;
+                padding:15px 30px;
+                border-radius:10px;
             }
-            .big-button:hover {
+            div.stButton > button:first-child:hover {
                 background-color: #45a049;
+                color:white;
+            }
+            .button-right {
+                display: flex;
+                justify-content: flex-end;
             }
             </style>
-            <form action="#" method="post">
-                <button class="big-button" type="submit">📥 Sauvegarder la session</button>
-            </form>
-            """,
-            unsafe_allow_html=True
-        )
+        """, unsafe_allow_html=True)
+
+        # === ENREGISTREMENT DE LA SESSION ===
+        with st.container():
+            st.markdown('<div class="button-right">', unsafe_allow_html=True)
+            if st.button("📥 Sauvegarder la session"):
+                user_login = st.session_state["utilisateur"]["Login"]
+                enregistrer_session(user_login, st.session_state["questions_tirees"])
+            st.markdown('</div>', unsafe_allow_html=True)
+

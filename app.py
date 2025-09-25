@@ -268,8 +268,8 @@ if "utilisateur" in st.session_state:
         data = {
             "login": user_login,
             "date": datetime.now().isoformat(),
-            "nb_questions": len(questions_df_tirees),   # ✅ avec underscore
-            "details_questions": json.dumps(questions_infos, ensure_ascii=False)  # ✅ avec underscore
+            "nbquestions": len(questions_df_tirees),   # ⚠️ sans underscore
+            "detailsquestions": json.dumps(questions_infos, ensure_ascii=False)  # ⚠️ sans underscore
         }
 
         st.write("🔍 Données envoyées à Supabase :", data)
@@ -280,9 +280,9 @@ if "utilisateur" in st.session_state:
             st.write("📦 Données insérées :", res.data)
             st.write("🔑 Status :", getattr(res, "status_code", "inconnu"))
             st.success("✅ Session enregistrée dans Supabase")
-            st.write(res)
         except Exception as e:
             st.error(f"❌ Erreur lors de l'insertion Supabase : {e}")
+
 
 
     # === TIRAGE ALÉATOIRE ===

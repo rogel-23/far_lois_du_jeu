@@ -190,6 +190,12 @@ if "utilisateur" in st.session_state:
                         st.bar_chart(questions_details_df["Type"].value_counts())
 
 
+
+        # === ESPACE VISUEL DE TRANSITION ===
+        st.markdown(" ")
+        st.markdown("---")
+        st.markdown(" ")
+        
         # === ENCADRÉ FILTRES ===
         st.markdown(
             """

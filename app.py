@@ -44,15 +44,9 @@ if "utilisateur" in st.session_state:
         # Normalisation
         rename_map = {
             "login": "login",
-            "Login": "login",
             "date": "date",
-            "Date": "date",
-            "nbquestions": "nb_questions",
-            "NbQuestions": "nb_questions",
-            "nb_questions": "nb_questions",
-            "detailsquestions": "details_questions",
-            "DetailsQuestions": "details_questions",
-            "details_questions": "details_questions"
+            "nbquestions": "nb_questions",        # correction
+            "detailsquestions": "details_questions"  # correction
         }
         histo = histo.rename(columns=lambda x: rename_map.get(x, x))
 
@@ -140,7 +134,12 @@ if "utilisateur" in st.session_state:
 
                         # Conversion de 'DetailsQuestions' si dispo
                         if "details_questions" in histo_user.columns:
-                            details_exploded = histo_user["details_questions"].dropna().apply(ast.literal_eval).explode()
+                            details_exploded = (
+                                histo_user["details_questions"]
+                                .dropna()
+                                .apply(lambda x: json.loads(x) if isinstance(x, str) else x)
+                                .explode()
+                            )
                             questions_details_df = pd.DataFrame(details_exploded.tolist())
 
                             if not questions_details_df.empty:

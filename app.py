@@ -278,12 +278,11 @@ if "utilisateur" in st.session_state:
     def enregistrer_session(user_login, questions_df_tirees):
         questions_infos = questions_df_tirees[["Loi", "Format", "Type", "Niveau"]].astype(str).to_dict(orient="records")
 
-        # Conversion en texte JSON
         data = {
             "login": user_login,
             "date": datetime.now().isoformat(),
-            "nb_questions": len(questions_df_tirees),
-            "details_questions": json.dumps(questions_infos, ensure_ascii=False)
+            "nbquestions": len(questions_df_tirees),   # sans underscore
+            "detailsquestions": json.dumps(questions_infos, ensure_ascii=False)  # sans underscore
         }
 
         st.write("🔍 Données envoyées à Supabase :", data)
@@ -294,6 +293,7 @@ if "utilisateur" in st.session_state:
             st.write(res)
         except Exception as e:
             st.error(f"❌ Erreur lors de l'insertion Supabase : {e}")
+
 
 
 

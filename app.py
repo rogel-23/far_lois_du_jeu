@@ -257,24 +257,25 @@ if "utilisateur" in st.session_state:
     ]
 
     def enregistrer_session(user_login, questions_df_tirees):
-        questions_infos = questions_df_tirees[["Loi", "Format", "Type", "Niveau"]].astype(str).to_dict(orient="records")
+        # ⚠️ garder uniquement les questions répondues
+        questions_repondues = questions_df_tirees[questions_df_tirees.get("repondu", False) == True]
+
+        if questions_repondues.empty:
+            st.warning("⚠️ Aucune question réellement travaillée, session non enregistrée.")
+            return
+
+        questions_infos = questions_repondues[["Loi", "Format", "Type", "Niveau"]].astype(str).to_dict(orient="records")
 
         data = {
             "login": user_login,
             "date": datetime.now().isoformat(),
-            "nbquestions": len(questions_df_tirees),
-            "detailsquestions": questions_infos
+            "nbquestions": len(questions_repondues),
+            "detailsquestions": json.dumps(questions_infos, ensure_ascii=False)
         }
 
-        st.write("🔍 Données envoyées :", data)
+        res = supabase.table("historique_sessions").insert([data]).execute()
+        st.success("✅ Session enregistrée dans Supabase")
 
-        try:
-            res = supabase.table("historique_sessions").insert([data]).execute()
-            st.write("✅ Résultat brut :", res)
-            st.write("📦 Données insérées :", getattr(res, "data", None))
-            st.write("🔑 Status :", getattr(res, "status_code", "inconnu"))
-        except Exception as e:
-            st.error(f"❌ Erreur lors de l'insertion : {e}")
 
 
 
@@ -327,31 +328,30 @@ if "utilisateur" in st.session_state:
             col4.markdown(f"<div style='background-color:#5cb85c; padding:5px; border-radius:5px; text-align:center;'>Niveau : {row['Niveau']}</div>", unsafe_allow_html=True)
             col5.markdown(f"<div style='background-color:#d9534f; padding:5px; border-radius:5px; text-align:center;'>Source : {row['Source']}</div>", unsafe_allow_html=True)
 
-            # ✅ Cas 1 : QCM
+            # QCM
             if "qcm" in row["Format"].lower() and pd.notna(row["Propositions"]):
                 propositions = [p.strip() for p in str(row["Propositions"]).split("\n") if p.strip()]
-                propositions = ["---"] + propositions  # "---" comme valeur neutre
-                selected_prop = st.radio(
-                    "Choisissez votre réponse :", 
-                    propositions, 
-                    key=f"qcm_{i}", 
-                    index=0
-                )
+                propositions = ["---"] + propositions
+                selected_prop = st.radio("Choisissez votre réponse :", propositions, key=f"qcm_{i}", index=0)
 
-                if st.button(f"👁️ Voir la réponse QCM (Question {i+1})", key=f"btn_qcm_{i}"):
+                if st.button(f"👁️ Voir la réponse (Question {i+1})", key=f"btn_qcm_{i}"):
                     if selected_prop != "---":
                         reponse_formatee = str(row["Réponse attendue"]).replace("\n", "  \n")
                         st.success(f"**Réponse attendue :**  \n{reponse_formatee}")
+                        # ✅ Marquer comme répondu
+                        st.session_state["questions_tirees"].at[i, "repondu"] = True
                     else:
                         st.warning("👉 Merci de sélectionner une réponse avant d’afficher la correction.")
 
-            # ✅ Cas 2 : Question ouverte
+            # Ouverte
             else:
                 user_answer = st.text_area("Votre réponse :", key=f"reponse_{i}")
-
-                if st.button(f"👁️ Voir la réponse ouverte (Question {i+1})", key=f"btn_open_{i}"):
-                    if user_answer.strip():  # Vérifie que ce n’est pas vide
+                if st.button(f"👁️ Voir la réponse (Question {i+1})", key=f"btn_ouv_{i}"):
+                    if user_answer.strip():
                         reponse_formatee = str(row["Réponse attendue"]).replace("\n", "  \n")
                         st.success(f"**Réponse attendue :**  \n{reponse_formatee}")
+                        # ✅ Marquer comme répondu
+                        st.session_state["questions_tirees"].at[i, "repondu"] = True
                     else:
                         st.warning("✍️ Merci d’écrire une réponse avant de consulter la correction.")
+

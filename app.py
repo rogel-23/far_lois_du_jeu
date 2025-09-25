@@ -103,6 +103,7 @@ if "utilisateur" in st.session_state:
                     colf2.bar_chart(questions_details_df["Niveau"].value_counts())
 
 
+    # === TABLEAU DE BORD UTILISATEUR ===
     if st.session_state["utilisateur"]["Login"] != "admin":
         st.subheader("📊 Mon tableau de bord")
 
@@ -113,15 +114,27 @@ if "utilisateur" in st.session_state:
             st.warning("⚠️ Aucune donnée trouvée dans la table Supabase `historique_sessions`.")
         else:
             user_login = st.session_state["utilisateur"]["Login"]
+            histo_user = histo[histo["login"] == user_login]
 
-            if "login" not in histo.columns:
-                st.error("❌ La colonne 'login' est absente de la table Supabase. Vérifie le schéma.")
+            if histo_user.empty:
+                st.info("ℹ️ Aucune session enregistrée pour cet utilisateur.")
             else:
-                histo_user = histo[histo["login"] == user_login]
+                # === ENCADRÉ STATS ===
+                with st.container():
+                    st.markdown(
+                        """
+                        <div style="
+                            border:2px solid #4CAF50;
+                            border-radius:10px;
+                            padding:15px;
+                            margin-bottom:20px;
+                            background-color:#f9fff9;">
+                            <h3>📈 Mes statistiques</h3>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
 
-                if histo_user.empty:
-                    st.info("ℹ️ Aucune session enregistrée pour cet utilisateur.")
-                else:
                     col1, col2 = st.columns(2)
                     col1.metric("📅 Sessions effectuées", len(histo_user))
                     col2.metric("❓ Questions générées", histo_user["nbquestions"].sum())
@@ -135,21 +148,24 @@ if "utilisateur" in st.session_state:
                         )
                         questions_details_df = pd.DataFrame(details_exploded.tolist())
 
-
                         if not questions_details_df.empty:
                             lois_counts = questions_details_df["Loi"].value_counts().head(5)
-                            st.markdown("### 📚 Lois les plus travaillées")
                             st.bar_chart(lois_counts)
 
-                            formats_counts = questions_details_df["Format"].value_counts()
-                            col3, col4 = st.columns(2)
-                            col3.markdown("### 📝 Formats")
-                            col3.bar_chart(formats_counts)
-
-                            niveaux_counts = questions_details_df["Niveau"].value_counts()
-                            col4.markdown("### 🎯 Niveaux")
-                            col4.bar_chart(niveaux_counts)
-
+        # === ENCADRÉ FILTRES ===
+        st.markdown(
+            """
+            <div style="
+                border:2px solid #2196F3;
+                border-radius:10px;
+                padding:15px;
+                margin-top:30px;
+                background-color:#f0f8ff;">
+                <h3>🎛️ Paramètres d'entraînement</h3>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
 
     # === CHARGEMENT DES QUESTIONS ===

@@ -257,23 +257,25 @@ if "utilisateur" in st.session_state:
     ]
 
     def enregistrer_session(user_login, questions_df_tirees):
-        # On prépare les infos des questions tirées
         questions_infos = questions_df_tirees[["Loi", "Format", "Type", "Niveau"]].astype(str).to_dict(orient="records")
 
-        # On construit l’enregistrement
         data = {
             "login": user_login,
             "date": datetime.now().isoformat(),
             "nbquestions": len(questions_df_tirees),
-            "detailsquestions": questions_infos  # ✅ en JSON natif (pas dumps)
+            "detailsquestions": questions_infos
         }
+
+        st.write("🔍 Données envoyées :", data)
 
         try:
             res = supabase.table("historique_sessions").insert([data]).execute()
-            st.success("✅ Session enregistrée dans Supabase")
-            st.write("📦 Données insérées :", res.data)  # debug optionnel
+            st.write("✅ Résultat brut :", res)
+            st.write("📦 Données insérées :", getattr(res, "data", None))
+            st.write("🔑 Status :", getattr(res, "status_code", "inconnu"))
         except Exception as e:
-            st.error(f"❌ Erreur lors de l'insertion Supabase : {e}")
+            st.error(f"❌ Erreur lors de l'insertion : {e}")
+
 
 
 

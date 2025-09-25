@@ -434,25 +434,29 @@ if "utilisateur" in st.session_state:
                         st.warning("✍️ Merci d’écrire une réponse avant de consulter la correction.")
 
 
-        # Appliquer un style global aux boutons Streamlit
-        st.markdown("""
+        save_clicked = st.markdown(
+            """
             <style>
-            div.stButton > button:first-child {
+            .big-button {
+                display: inline-block;
+                padding: 15px 30px;
+                font-size: 20px;
+                font-weight: bold;
+                color: white;
                 background-color: #4CAF50;
-                color:white;
-                font-size:20px;
-                font-weight:bold;
-                padding:15px 30px;
-                border-radius:10px;
+                border: none;
+                border-radius: 10px;
+                cursor: pointer;
+                text-align: center;
+                transition: 0.3s;
             }
-            div.stButton > button:first-child:hover {
+            .big-button:hover {
                 background-color: #45a049;
-                color:white;
             }
             </style>
-        """, unsafe_allow_html=True)
-
-        # Ton bouton reste fonctionnel mais plus visible
-        if st.button("📥 Sauvegarder la session"):
-            user_login = st.session_state["utilisateur"]["Login"]
-            enregistrer_session(user_login, st.session_state["questions_tirees"])
+            <form action="#" method="post">
+                <button class="big-button" type="submit">📥 Sauvegarder la session</button>
+            </form>
+            """,
+            unsafe_allow_html=True
+        )

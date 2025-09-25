@@ -45,10 +45,11 @@ if "utilisateur" in st.session_state:
         rename_map = {
             "login": "login",
             "date": "date",
-            "nbquestions": "nb_questions",        # correction
-            "detailsquestions": "details_questions"  # correction
+            "nb_questions": "nb_questions",           # Supabase en snake_case
+            "details_questions": "details_questions"  # Supabase en snake_case
         }
         histo = histo.rename(columns=lambda x: rename_map.get(x, x))
+        st.write("Colonnes normalisées :", histo.columns.tolist())
 
         # Ajout des colonnes utiles
         stats = histo.groupby("login").agg({

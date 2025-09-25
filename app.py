@@ -270,10 +270,10 @@ if "utilisateur" in st.session_state:
 
         # On garde les mêmes noms de colonnes que le CSV
         data = {
-            "Login": user_login,
-            "Date": datetime.now().isoformat(),
-            "NbQuestions": len(questions_df_tirees),
-            "DetailsQuestions": str(questions_infos)  # stocké en texte JSON
+            "login": user_login,
+            "date": datetime.now().isoformat(),
+            "nbquestions": len(questions_df_tirees),
+            "detailsquestions": questions_infos
         }
 
         res = supabase.table("historique_sessions").insert(data).execute()

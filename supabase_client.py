@@ -1,4 +1,4 @@
-from supabase import create_client
+from supabase_client import create_client
 import os
 
 SUPABASE_URL = "https://qktixcnagbbqggneebdq.supabase.co"

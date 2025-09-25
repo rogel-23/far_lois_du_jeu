@@ -428,61 +428,36 @@ if "utilisateur" in st.session_state:
                         st.warning("✍️ Merci d’écrire une réponse avant de consulter la correction.")
 
 
-        # === STYLE POUR LE BOUTON SAUVEGARDE ===
+        # === STYLE UNIQUEMENT POUR LE BOUTON "save_button" ===
         st.markdown("""
             <style>
-            .big-save-btn {
+            div[data-testid="stButton"][id="save_button"] > button {
                 background-color: #4CAF50;
                 color: white;
                 font-size: 20px;
                 font-weight: bold;
                 padding: 15px 30px;
                 border-radius: 10px;
-                border: none;
-                cursor: pointer;
             }
-            .big-save-btn:hover {
+            div[data-testid="stButton"][id="save_button"] > button:hover {
                 background-color: #45a049;
+                color: white;
             }
             .button-right {
                 display: flex;
                 justify-content: flex-end;
-                margin-top: 20px;
             }
             </style>
         """, unsafe_allow_html=True)
 
-        # === BOUTON HTML CUSTOM ===
-        save_button = st.markdown(
-            """
-            <div class="button-right">
-                <form action="#" method="post">
-                    <button class="big-save-btn" type="submit" name="save_session">📥 Sauvegarder la session</button>
-                </form>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        # === ENREGISTREMENT DE LA SESSION ===
+        with st.container():
+            st.markdown('<div class="button-right">', unsafe_allow_html=True)
+            if st.button("📥 Sauvegarder la session", key="save_button"):
+                user_login = st.session_state["utilisateur"]["Login"]
+                enregistrer_session(user_login, st.session_state["questions_tirees"])
+                st.success("✅ Session enregistrée avec succès")
+                st.rerun()  # 🔄 force la mise à jour immédiate des stats
+            st.markdown('</div>', unsafe_allow_html=True)
 
-        # === DÉTECTION DU CLIC ===
-        if st.session_state.get("save_trigger", False):
-            user_login = st.session_state["utilisateur"]["Login"]
-            enregistrer_session(user_login, st.session_state["questions_tirees"])
-            st.success("✅ Session enregistrée avec succès")
-            st.session_state["save_trigger"] = False
-
-        # === PETIT SCRIPT POUR CAPTER LE CLIC ===
-        components.html("""
-            <script>
-            const form = window.parent.document.querySelector('form[action="#"]');
-            if (form) {
-                form.onsubmit = function(e) {
-                    e.preventDefault();
-                    fetch(window.location.href, {method: "POST"}).then(() => {
-                        window.parent.postMessage({isStreamlitMessage:true, type:"streamlit:setComponentValue", key:"save_trigger", value:true}, "*")
-                    });
-                };
-            }
-            </script>
-        """, height=0)
 

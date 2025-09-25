@@ -40,35 +40,33 @@ if "utilisateur" in st.session_state:
 
         response = supabase.table("historique_sessions").select("*").execute()
         histo = pd.DataFrame(response.data)
+        # Normalisation
+        rename_map = {
+            "login": "login",
+            "date": "date",
+            "nbquestions": "nb_questions",
+            "detailsquestions": "details_questions"
+        }
+        histo = histo.rename(columns=lambda x: rename_map.get(x, x))
 
         if histo.empty:
             st.warning("⚠️ Aucune donnée trouvée dans Supabase.")
         else:
-            # Normalisation
-            rename_map = {
-                "login": "login",
-                "date": "date",
-                "nbquestions": "nb_questions",
-                "detailsquestions": "details_questions"
-            }
-            histo = histo.rename(columns=lambda x: rename_map.get(x, x))
+            # Ajout des colonnes utiles
+            stats = histo.groupby("login").agg({
+                "date": "count",
+                "nb_questions": "sum",
+            }).rename(columns={
+                "date": "Sessions",
+                "nb_questions": "Questions générées"
+            })
+            stats["Moyenne Q/session"] = (stats["Questions générées"] / stats["Sessions"]).round(2)
 
+            # Dernière session
+            last_sessions = histo.groupby("login")["date"].max().rename("Dernière session")
+            stats = stats.join(last_sessions)
 
-        # Ajout des colonnes utiles
-        stats = histo.groupby("login").agg({
-            "date": "count",
-            "nb_questions": "sum",
-        }).rename(columns={
-            "date": "Sessions",
-            "nb_questions": "Questions générées"
-        })
-        stats["Moyenne Q/session"] = (stats["Questions générées"] / stats["Sessions"]).round(2)
-
-        # Dernière session
-        last_sessions = histo.groupby("login")["date"].max().rename("Dernière session")
-        stats = stats.join(last_sessions)
-
-        st.dataframe(stats.sort_values("Sessions", ascending=False))
+            st.dataframe(stats.sort_values("Sessions", ascending=False))
 
         # Vue par arbitre
         st.markdown("## 🔎 Détail par arbitre")
@@ -117,67 +115,63 @@ if "utilisateur" in st.session_state:
         # === TABLEAU DE BORD PERSONNEL ===
         st.subheader("📊 Mon tableau de bord")
 
-        # Lecture de l'historique complet
-        historique_path = "historique_sessions.csv"
-        if os.path.exists(historique_path):
-            response = supabase.table("historique_sessions").select("*").execute()
-            st.write("🔍 Réponse Supabase :", response)
-            histo = pd.DataFrame(response.data)
+        # Lecture de l'historique complet depuis Supabase
+        response = supabase.table("historique_sessions").select("*").execute()
+        st.write("🔍 Réponse Supabase :", response)  # debug
+        histo = pd.DataFrame(response.data)
 
-            if histo.empty:
-                st.warning("⚠️ Aucune donnée trouvée dans la table Supabase `historique_sessions`.")
-            else:
-                # Harmonisation des noms de colonnes
-                rename_map = {
-                    "login": "login",
-                    "date": "date",
-                    "nbquestions": "nb_questions",
-                    "detailsquestions": "details_questions"
-                }
-                histo = histo.rename(columns=lambda x: rename_map.get(x, x))
-
-                st.write("Colonnes disponibles après normalisation :", histo.columns.tolist())
-
-                user_login = st.session_state["utilisateur"]["Login"]
-
-                if "login" not in histo.columns:
-                    st.error("❌ La colonne 'login' est absente de la table Supabase. Vérifie le schéma.")
-                else:
-                    histo_user = histo[histo["login"] == user_login]
-
-                    if histo_user.empty:
-                        st.info("ℹ️ Aucune session enregistrée pour cet utilisateur.")
-                    else:
-                        # === METRICS GLOBALES ===
-                        col1, col2 = st.columns(2)
-                        col1.metric("📅 Sessions effectuées", len(histo_user))
-                        col2.metric("❓ Questions générées", histo_user["nb_questions"].sum())
-
-                        # Conversion de 'DetailsQuestions' si dispo
-                        if "details_questions" in histo_user.columns:
-                            details_exploded = (
-                                histo_user["details_questions"]
-                                .dropna()
-                                .apply(lambda x: json.loads(x) if isinstance(x, str) else x)
-                                .explode()
-                            )
-                            questions_details_df = pd.DataFrame(details_exploded.tolist())
-
-                            if not questions_details_df.empty:
-                                lois_counts = questions_details_df["Loi"].value_counts().head(5)
-                                st.markdown("### 📚 Lois les plus travaillées")
-                                st.bar_chart(lois_counts)
-
-                                formats_counts = questions_details_df["Format"].value_counts()
-                                col3, col4 = st.columns(2)
-                                col3.markdown("### 📝 Formats")
-                                col3.bar_chart(formats_counts)
-
-                                niveaux_counts = questions_details_df["Niveau"].value_counts()
-                                col4.markdown("### 🎯 Niveaux")
-                                col4.bar_chart(niveaux_counts)
+        if histo.empty:
+            st.warning("⚠️ Aucune donnée trouvée dans la table Supabase `historique_sessions`.")
         else:
-            st.info("Aucune donnée d’historique trouvée.")
+            # Harmonisation des noms de colonnes
+            rename_map = {
+                "login": "login",
+                "date": "date",
+                "nbquestions": "nb_questions",
+                "detailsquestions": "details_questions"
+            }
+            histo = histo.rename(columns=lambda x: rename_map.get(x, x))
+
+            st.write("Colonnes disponibles après normalisation :", histo.columns.tolist())
+
+            user_login = st.session_state["utilisateur"]["Login"]
+
+            if "login" not in histo.columns:
+                st.error("❌ La colonne 'login' est absente de la table Supabase. Vérifie le schéma.")
+            else:
+                histo_user = histo[histo["login"] == user_login]
+
+                if histo_user.empty:
+                    st.info("ℹ️ Aucune session enregistrée pour cet utilisateur.")
+                else:
+                    # === METRICS GLOBALES ===
+                    col1, col2 = st.columns(2)
+                    col1.metric("📅 Sessions effectuées", len(histo_user))
+                    col2.metric("❓ Questions générées", histo_user["nb_questions"].sum())
+
+                    # Conversion de 'DetailsQuestions' si dispo
+                    if "details_questions" in histo_user.columns:
+                        details_exploded = (
+                            histo_user["details_questions"]
+                            .dropna()
+                            .apply(lambda x: json.loads(x) if isinstance(x, str) else x)
+                            .explode()
+                        )
+                        questions_details_df = pd.DataFrame(details_exploded.tolist())
+
+                        if not questions_details_df.empty:
+                            lois_counts = questions_details_df["Loi"].value_counts().head(5)
+                            st.markdown("### 📚 Lois les plus travaillées")
+                            st.bar_chart(lois_counts)
+
+                            formats_counts = questions_details_df["Format"].value_counts()
+                            col3, col4 = st.columns(2)
+                            col3.markdown("### 📝 Formats")
+                            col3.bar_chart(formats_counts)
+
+                            niveaux_counts = questions_details_df["Niveau"].value_counts()
+                            col4.markdown("### 🎯 Niveaux")
+                            col4.bar_chart(niveaux_counts)
 
 
     # === CHARGEMENT DES QUESTIONS ===
@@ -290,8 +284,8 @@ if "utilisateur" in st.session_state:
         data = {
             "login": user_login,
             "date": datetime.now().isoformat(),
-            "nbquestions": len(questions_df_tirees),   # sans underscore
-            "detailsquestions": json.dumps(questions_infos, ensure_ascii=False)  # sans underscore
+            "nb_questions": len(questions_df_tirees),   # ✅ avec underscore
+            "details_questions": json.dumps(questions_infos, ensure_ascii=False)  # ✅ avec underscore
         }
 
         st.write("🔍 Données envoyées à Supabase :", data)
@@ -302,6 +296,7 @@ if "utilisateur" in st.session_state:
             st.write(res)
         except Exception as e:
             st.error(f"❌ Erreur lors de l'insertion Supabase : {e}")
+
 
 
 

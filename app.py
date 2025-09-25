@@ -6,6 +6,7 @@ from datetime import datetime
 import os
 import ast
 from supabase_client import supabase
+import json
 
 # === CONFIGURATION ===
 st.set_page_config(page_title="Entraînement Lois du Jeu", page_icon="⚽", layout="centered")
@@ -268,16 +269,22 @@ if "utilisateur" in st.session_state:
     def enregistrer_session(user_login, questions_df_tirees):
         questions_infos = questions_df_tirees[["Loi", "Format", "Type", "Niveau"]].astype(str).to_dict(orient="records")
 
-        # On garde les mêmes noms de colonnes que le CSV
+        # Conversion en texte JSON
         data = {
             "login": user_login,
             "date": datetime.now().isoformat(),
             "nbquestions": len(questions_df_tirees),
-            "detailsquestions": questions_infos
+            "detailsquestions": json.dumps(questions_infos, ensure_ascii=False)
         }
 
-        res = supabase.table("historique_sessions").insert(data).execute()
-        st.write("Résultat insertion :", res)
+        st.write("🔍 Données envoyées à Supabase :", data)
+
+        try:
+            res = supabase.table("historique_sessions").insert(data).execute()
+            st.success("✅ Session enregistrée dans Supabase")
+            st.write(res)
+        except Exception as e:
+            st.error(f"❌ Erreur lors de l'insertion Supabase : {e}")
 
 
 

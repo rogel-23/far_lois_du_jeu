@@ -5,6 +5,7 @@ import streamlit.components.v1 as components
 from datetime import datetime
 import os
 import ast
+from supabase_client import supabase
 
 # === CONFIGURATION ===
 st.set_page_config(page_title="Entraînement Lois du Jeu", page_icon="⚽", layout="centered")
@@ -102,7 +103,8 @@ if "utilisateur" in st.session_state:
         # Lecture de l'historique complet
         historique_path = "historique_sessions.csv"
         if os.path.exists(historique_path):
-            histo = pd.read_csv(historique_path)
+            response = supabase.table("historique_sessions").select("*").execute()
+            histo = pd.DataFrame(response.data)
             user_login = st.session_state["utilisateur"]["Login"]
             histo_user = histo[histo["Login"] == user_login]
 
@@ -248,20 +250,15 @@ if "utilisateur" in st.session_state:
     def enregistrer_session(user_login, questions_df_tirees):
         questions_infos = questions_df_tirees[["Loi", "Format", "Type", "Niveau"]].astype(str).to_dict(orient="records")
 
-        nouvelle_ligne = {
-            "Login": user_login,
-            "Date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "NbQuestions": len(questions_df_tirees),
-            "DetailsQuestions": str(questions_infos)
+        data = {
+            "login": user_login,
+            "date": datetime.now().isoformat(),
+            "nb_questions": len(questions_df_tirees),
+            "details_questions": questions_infos
         }
 
-        historique_path = "historique_sessions.csv"
-        if os.path.exists(historique_path):
-            historique_df = pd.read_csv(historique_path)
-            historique_df = pd.concat([historique_df, pd.DataFrame([nouvelle_ligne])], ignore_index=True)
-        else:
-            historique_df = pd.DataFrame([nouvelle_ligne])
-        historique_df.to_csv(historique_path, index=False)
+        supabase.table("historique_sessions").insert(data).execute()
+
 
 
     # === TIRAGE ALÉATOIRE ===
